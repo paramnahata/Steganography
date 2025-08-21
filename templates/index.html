@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🔒 Image Steganography Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .dropzone { border: 2px dashed rgba(0,0,0,.15); }
+    .dropzone.drag { border-color: rgba(59,130,246,1); background: rgba(59,130,246,.05); }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-xl font-bold">
+        <a href="#encode" class="hover:text-black-600">🔒 StegoLab</a></h1>
+      <nav class="flex gap-4 text-sm">
+        <a href="#encode" class="hover:text-blue-600">Encode</a>
+        <a href="#decode" class="hover:text-blue-600">Decode</a>
+        <a href="https://github.com/" target="_blank" class="hover:text-blue-600">Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <section class="mb-8">
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6">
+        <h2 class="text-2xl font-semibold mb-2">Image Steganography Tool</h2>
+        <p class="text-gray-600">Hide a secret message inside a PNG image, or reveal a message from a stego image. Works best with lossless PNGs.</p>
+        <ul class="text-sm text-gray-600 list-disc pl-5 mt-3">
+          <li>Use <span class="font-medium">.png</span> images (JPEG can corrupt hidden data).</li>
+          <li>Keep image size reasonable (&lt; 5–10 MB for speed).</li>
+          <li>Optional passphrase adds a lightweight check (not cryptographic).</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Encode Card -->
+    <section id="encode" class="grid md:grid-cols-2 gap-6 items-start">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold mb-1">Encode (Hide Message)</h3>
+        <p class="text-gray-600 text-sm mb-4">Upload a cover image and embed your secret message inside it.</p>
+
+        <div id="encodeDrop" class="dropzone rounded-xl p-4 text-center transition">
+          <input id="encodeFile" type="file" accept="image/png,image/*" class="hidden" />
+          <button id="encodeChoose" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700">Choose Image</button>
+          <p class="text-xs text-gray-500 mt-2">or drag & drop here</p>
+          <img id="encodePreview" class="hidden mx-auto mt-4 rounded-lg max-h-56" alt="Preview" />
+        </div>
+
+        <label class="block text-sm font-medium mt-4">Secret Message</label>
+        <textarea id="secretText" class="w-full mt-1 rounded-xl border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm p-3" rows="4" placeholder="Type your secret..."></textarea>
+        <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+          <span id="charCount">0 characters</span>
+          <span>Tip: keep it short for small images.</span>
+        </div>
+
+        <label class="block text-sm font-medium mt-4">Optional Passphrase</label>
+        <input id="passphrase" type="password" class="w-full mt-1 rounded-xl border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm p-3" placeholder="(Not encryption, just a check)" />
+
+        <div class="mt-5 flex items-center gap-3">
+          <button id="encodeBtn" class="px-4 py-2 rounded-xl bg-gray-900 text-white font-medium hover:bg-black disabled:opacity-50" disabled>
+            Hide Message & Download
+          </button>
+          <span id="encodeStatus" class="text-sm text-gray-500"></span>
+        </div>
+      </div>
+
+      <!-- Decode Card -->
+      <div id="decode" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold mb-1">Decode (Reveal Message)</h3>
+        <p class="text-gray-600 text-sm mb-4">Upload a stego image to extract the hidden message.</p>
+
+        <div id="decodeDrop" class="dropzone rounded-xl p-4 text-center transition">
+          <input id="decodeFile" type="file" accept="image/png,image/*" class="hidden" />
+          <button id="decodeChoose" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700">Choose Image</button>
+          <p class="text-xs text-gray-500 mt-2">or drag & drop here</p>
+          <img id="decodePreview" class="hidden mx-auto mt-4 rounded-lg max-h-56" alt="Preview" />
+        </div>
+
+        <label class="block text-sm font-medium mt-4">Passphrase (if used)</label>
+        <input id="passphraseDecode" type="password" class="w-full mt-1 rounded-xl border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm p-3" placeholder="Enter the passphrase used in encoding" />
+
+        <div class="mt-5 flex items-center gap-3">
+          <button id="decodeBtn" class="px-4 py-2 rounded-xl bg-gray-900 text-white font-medium hover:bg-black disabled:opacity-50" disabled>
+            Reveal Message
+          </button>
+          <span id="decodeStatus" class="text-sm text-gray-500"></span>
+        </div>
+
+        <div id="decodedBox" class="hidden mt-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold">🔐 Decoded Message</h4>
+            <button id="copyBtn" class="text-xs px-2 py-1 rounded-lg border border-gray-300 hover:bg-gray-100">Copy</button>
+          </div>
+          <pre id="decodedText" class="mt-2 whitespace-pre-wrap text-sm"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-10 text-xs text-gray-500">
+      <p>
+        Note: This UI expects a Flask backend with <code>/encode</code> returning the stego PNG (as a file download) and <code>/decode</code> returning plain text or JSON with the hidden message. Passphrase is sent along with message as a prefix for a basic check.
+      </p>
+    </section>
+  </main>
+
+  <template id="toastTpl">
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-xl shadow-lg"></div>
+  </template>
+
+  <script>
+    // Utilities
+    const $ = (s) => document.querySelector(s);
+    const toast = (msg) => {
+      const tpl = document.getElementById('toastTpl');
+      const el = tpl.content.firstElementChild.cloneNode(true);
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    };
+
+    const humanSize = (bytes) => {
+      const units = ['B','KB','MB','GB'];
+      let i=0; while (bytes >= 1024 && i < units.length-1) { bytes/=1024; i++; }
+      return `${bytes.toFixed(1)} ${units[i]}`;
+    };
+
+    // Drag & drop helpers
+    function wireDropzone(boxId, inputId, previewId, onChange) {
+      const box = document.getElementById(boxId);
+      const input = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+      const chooseBtn = box.querySelector('button');
+
+      chooseBtn.addEventListener('click', () => input.click());
+
+      const setFile = (file) => {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) return toast('Please choose an image file');
+        if (file.size > 12 * 1024 * 1024) return toast('Max file size is 12 MB');
+        const url = URL.createObjectURL(file);
+        preview.src = url; preview.classList.remove('hidden');
+        onChange(file);
+      };
+
+      input.addEventListener('change', (e) => setFile(e.target.files[0]));
+
+      ['dragenter','dragover'].forEach(ev => box.addEventListener(ev, (e) => { e.preventDefault(); box.classList.add('drag'); }));
+      ;['dragleave','drop'].forEach(ev => box.addEventListener(ev, (e) => { e.preventDefault(); box.classList.remove('drag'); }));
+      box.addEventListener('drop', (e) => setFile(e.dataTransfer.files[0]));
+    }
+
+    // Encode wiring
+    let encodeFile = null;
+    wireDropzone('encodeDrop', 'encodeFile', 'encodePreview', (file) => {
+      encodeFile = file;
+      $('#encodeBtn').disabled = !encodeFile || !$('#secretText').value.trim();
+    });
+
+    $('#secretText').addEventListener('input', (e) => {
+      $('#charCount').textContent = `${e.target.value.length} characters`;
+      $('#encodeBtn').disabled = !encodeFile || !e.target.value.trim();
+    });
+
+    $('#encodeBtn').addEventListener('click', async () => {
+      if (!encodeFile) return toast('Choose an image first');
+      const msg = $('#secretText').value.trim();
+      if (!msg) return toast('Type a secret message');
+
+      const pass = $('#passphrase').value.trim();
+      const payload = pass ? `[PASS:${pass}]` + msg : msg;
+
+      const fd = new FormData();
+      fd.append('image', encodeFile);
+      fd.append('message', payload);
+
+      $('#encodeStatus').textContent = 'Encoding…';
+      $('#encodeBtn').disabled = true;
+      try {
+        const res = await fetch('/encode', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Server error');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'secret.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        toast('Stego image downloaded');
+      } catch (e) {
+        toast('Failed to encode: ' + e.message);
+      } finally {
+        $('#encodeStatus').textContent = '';
+        $('#encodeBtn').disabled = false;
+      }
+    });
+
+    // Decode wiring
+    let decodeFile = null;
+    wireDropzone('decodeDrop', 'decodeFile', 'decodePreview', (file) => {
+      decodeFile = file;
+      $('#decodeBtn').disabled = !decodeFile;
+    });
+
+    $('#decodeBtn').addEventListener('click', async () => {
+      if (!decodeFile) return toast('Choose an image first');
+      const fd = new FormData();
+      fd.append('image', decodeFile);
+
+      $('#decodeStatus').textContent = 'Decoding…';
+      $('#decodeBtn').disabled = true;
+      try {
+        const res = await fetch('/decode', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Server error');
+        const ct = res.headers.get('Content-Type') || '';
+        let text = '';
+        if (ct.includes('application/json')) {
+          const j = await res.json();
+          text = j.message || j.error || '';
+        } else {
+          text = await res.text();
+        }
+
+        const pass = $('#passphraseDecode').value.trim();
+        if (pass && !text.startsWith(`[PASS:${pass}]`)) {
+          $('#decodedBox').classList.add('hidden');
+          toast('Wrong passphrase or no message');
+        } else {
+          if (text.startsWith('[PASS:')) {
+            text = text.replace(/^\[PASS:[^\]]+\]/, '');
+          }
+          $('#decodedText').textContent = text || '(No hidden message found)';
+          $('#decodedBox').classList.remove('hidden');
+          toast('Message revealed');
+        }
+      } catch (e) {
+        toast('Failed to decode: ' + e.message);
+      } finally {
+        $('#decodeStatus').textContent = '';
+        $('#decodeBtn').disabled = false;
+      }
+    });
+
+    // Copy button
+    $('#copyBtn').addEventListener('click', async () => {
+      const t = $('#decodedText').textContent;
+      try { await navigator.clipboard.writeText(t); toast('Copied to clipboard'); } catch {}
+    });
+  </script>
+</body>
+</html>
