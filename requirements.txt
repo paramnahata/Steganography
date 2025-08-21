@@ -1,4 +1,4 @@
 flask==3.0.3
-stegano==0.11.3
+stegano
 pillow==10.3.0
 gunicorn==22.0.0
