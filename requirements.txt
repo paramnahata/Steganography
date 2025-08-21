@@ -1,4 +1,5 @@
-flask==3.0.3
+flask
 stegano
-pillow==10.3.0
-gunicorn==22.0.0
+pillow
+gunicorn
+
